@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Risco de Crédito</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center py-10 px-4">
+
+    <div class="bg-white p-8 rounded-xl shadow-2xl max-w-4xl w-full border-t-8 border-blue-600">
+        <div class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-slate-800">Análise de Risco de Crédito</h1>
+            <p class="text-slate-500 mt-2">Sistema baseado em Machine Learning (Decision Tree)</p>
+        </div>
+
+        <form id="formAnalise" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Idade</label>
+                <input type="number" id="idade" required class="w-full p-2 border rounded" placeholder="Ex: 30">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Renda Anual (R$)</label>
+                <input type="number" id="renda" required class="w-full p-2 border rounded" placeholder="Ex: 50000">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Situação de Moradia</label>
+                <select id="moradia" class="w-full p-2 border rounded">
+                    <option value="RENT">Aluguel (RENT)</option>
+                    <option value="OWN">Própria (OWN)</option>
+                    <option value="MORTGAGE">Hipoteca (MORTGAGE)</option>
+                    <option value="OTHER">Outro</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Tempo de Emprego (Anos)</label>
+                <input type="number" id="tempo_emprego" step="0.1" required class="w-full p-2 border rounded" placeholder="Ex: 5.5">
+            </div>
+            <div class="col-span-1 md:col-span-2 border-t pt-4"><h3 class="text-lg font-semibold text-blue-600">Detalhes do Empréstimo</h3></div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Motivo</label>
+                <select id="motivo" class="w-full p-2 border rounded">
+                    <option value="PERSONAL">Pessoal</option>
+                    <option value="EDUCATION">Educação</option>
+                    <option value="MEDICAL">Médico</option>
+                    <option value="VENTURE">Empreendimento</option>
+                    <option value="HOMEIMPROVEMENT">Reforma</option>
+                    <option value="DEBTCONSOLIDATION">Pagamento de Dívidas</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Valor do Empréstimo (R$)</label>
+                <input type="number" id="valor" required class="w-full p-2 border rounded" placeholder="Ex: 10000">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Taxa de Juros (%)</label>
+                <input type="number" id="juros" step="0.1" required class="w-full p-2 border rounded" placeholder="Ex: 10.5">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Score de Crédito</label>
+                <select id="score" class="w-full p-2 border rounded">
+                    <option value="A">A (Excelente)</option>
+                    <option value="B">B (Muito Bom)</option>
+                    <option value="C">C (Bom)</option>
+                    <option value="D">D (Regular)</option>
+                    <option value="E">E (Ruim)</option>
+                    <option value="F">F (Muito Ruim)</option>
+                    <option value="G">G (Crítico)</option>
+                </select>
+            </div>
+            <div class="col-span-1 md:col-span-2 border-t pt-4"><h3 class="text-lg font-semibold text-blue-600">Histórico</h3></div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Já teve calote (Inadimplência)?</label>
+                <select id="calote" class="w-full p-2 border rounded">
+                    <option value="N">Não (N)</option>
+                    <option value="Y">Sim (Y)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Tempo Histórico de Crédito (Anos)</label>
+                <input type="number" id="tempo_historico" required class="w-full p-2 border rounded" placeholder="Ex: 10">
+            </div>
+
+            <div class="col-span-1 md:col-span-2 mt-6">
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700 transition duration-300">
+                    Calcular Risco
+                </button>
+            </div>
+        </form>
+
+        <div id="resultado" class="hidden mt-8 p-6 bg-gray-50 rounded-lg border text-center">
+            <h2 class="text-2xl font-bold mb-2">Decisão: <span id="decisaoTexto"></span></h2>
+            <p class="text-gray-600">Probabilidade de Inadimplência: <span id="riscoTexto" class="font-bold"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // O Script que conecta o HTML ao Python
+        document.getElementById('formAnalise').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Não recarrega a página
+
+            // Pega os dados dos campos
+            const dados = {
+                idade: document.getElementById('idade').value,
+                renda: document.getElementById('renda').value,
+                moradia: document.getElementById('moradia').value,
+                tempo_emprego: document.getElementById('tempo_emprego').value,
+                motivo: document.getElementById('motivo').value,
+                valor: document.getElementById('valor').value,
+                juros: document.getElementById('juros').value,
+                score: document.getElementById('score').value,
+                calote: document.getElementById('calote').value,
+                tempo_historico: document.getElementById('tempo_historico').value
+            };
+
+            // Envia para o Python
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(dados)
+            });
+
+            const resultado = await response.json();
+
+            // Mostra o resultado na tela
+            const divResultado = document.getElementById('resultado');
+            const textoDecisao = document.getElementById('decisaoTexto');
+            const textoRisco = document.getElementById('riscoTexto');
+
+            divResultado.classList.remove('hidden');
+            textoRisco.innerText = resultado.risco;
+            textoDecisao.innerText = resultado.decisao;
+
+            // Muda a cor (Verde se aprovado, Vermelho se negado)
+            if(resultado.decisao === 'APROVADO') {
+                textoDecisao.className = 'text-green-600';
+                divResultado.className = 'mt-8 p-6 bg-green-50 rounded-lg border border-green-200 text-center';
+            } else {
+                textoDecisao.className = 'text-red-600';
+                divResultado.className = 'mt-8 p-6 bg-red-50 rounded-lg border border-red-200 text-center';
+            }
+        });
+    </script>
+</body>
+</html>
