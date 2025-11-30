@@ -95,11 +95,10 @@
     </div>
 
     <script>
-        // O Script que conecta o HTML ao Python
         document.getElementById('formAnalise').addEventListener('submit', async function(e) {
-            e.preventDefault(); // Não recarrega a página
+            e.preventDefault();
 
-            // Pega os dados dos campos
+            // Pega os dados
             const dados = {
                 idade: document.getElementById('idade').value,
                 renda: document.getElementById('renda').value,
@@ -113,31 +112,45 @@
                 tempo_historico: document.getElementById('tempo_historico').value
             };
 
-            // Envia para o Python
-            const response = await fetch('/predict', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(dados)
-            });
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(dados)
+                });
 
-            const resultado = await response.json();
+                const resultado = await response.json();
 
-            // Mostra o resultado na tela
-            const divResultado = document.getElementById('resultado');
-            const textoDecisao = document.getElementById('decisaoTexto');
-            const textoRisco = document.getElementById('riscoTexto');
+                // Referências dos elementos na tela
+                const divResultado = document.getElementById('resultado');
+                const textoDecisao = document.getElementById('decisaoTexto');
+                const textoRisco = document.getElementById('riscoTexto');
 
-            divResultado.classList.remove('hidden');
-            textoRisco.innerText = resultado.risco;
-            textoDecisao.innerText = resultado.decisao;
+                // Verifica se o Python retornou erro
+                if (resultado.erro) {
+                    alert("Ocorreu um erro no servidor: " + resultado.erro);
+                    return;
+                }
 
-            // Muda a cor (Verde se aprovado, Vermelho se negado)
-            if(resultado.decisao === 'APROVADO') {
-                textoDecisao.className = 'text-green-600';
-                divResultado.className = 'mt-8 p-6 bg-green-50 rounded-lg border border-green-200 text-center';
-            } else {
-                textoDecisao.className = 'text-red-600';
-                divResultado.className = 'mt-8 p-6 bg-red-50 rounded-lg border border-red-200 text-center';
+                // Se deu certo:
+                divResultado.classList.remove('hidden');
+                textoRisco.innerText = "Risco calculado: " + resultado.risco;
+                textoDecisao.innerText = resultado.decisao;
+
+                // Estilização (Verde/Vermelho)
+                divResultado.className = 'mt-8 p-6 rounded-lg border text-center shadow-lg';
+                
+                if(resultado.decisao.includes('APROVADO')) {
+                    textoDecisao.className = 'text-2xl font-bold text-green-600 mb-2';
+                    divResultado.classList.add('bg-green-100', 'border-green-300');
+                } else {
+                    textoDecisao.className = 'text-2xl font-bold text-red-600 mb-2';
+                    divResultado.classList.add('bg-red-100', 'border-red-300');
+                }
+
+            } catch (err) {
+                alert("Erro de comunicação com o servidor.");
+                console.error(err);
             }
         });
     </script>
