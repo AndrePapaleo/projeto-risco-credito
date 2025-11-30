@@ -88,17 +88,16 @@
             </div>
         </form>
 
-        <div id="resultado" class="hidden mt-8 p-6 rounded-lg border text-center shadow-lg transition-all duration-500">
-            <h2 class="text-2xl font-bold mb-2">Decisão: <span id="decisaoTexto"></span></h2>
+        <div id="resultado" class="hidden mt-8 p-6 rounded-lg border-2 text-center shadow-lg transition-all duration-300">
+            <h2 class="text-2xl font-bold mb-2"><span id="decisaoTexto"></span></h2>
             <p class="text-gray-700 text-lg">Probabilidade de Inadimplência: <span id="riscoTexto" class="font-bold"></span></p>
         </div>
     </div>
 
     <script>
         document.getElementById('formAnalise').addEventListener('submit', async function(e) {
-            e.preventDefault(); // Impede o recarregamento da página
+            e.preventDefault();
 
-            // Coleta os dados do formulário
             const dados = {
                 idade: document.getElementById('idade').value,
                 renda: document.getElementById('renda').value,
@@ -113,7 +112,6 @@
             };
 
             try {
-                // Envia os dados para o backend (app.py)
                 const response = await fetch('/predict', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -122,35 +120,42 @@
 
                 const resultado = await response.json();
 
-                // Referências aos elementos da tela
                 const divResultado = document.getElementById('resultado');
                 const textoDecisao = document.getElementById('decisaoTexto');
                 const textoRisco = document.getElementById('riscoTexto');
 
-                // Verifica se houve erro no backend
                 if (resultado.erro) {
                     alert("Erro no servidor: " + resultado.erro);
                     return;
                 }
 
-                // Exibe o resultado
+                // Mostra a div
                 divResultado.classList.remove('hidden');
+                
+                // Preenche os textos
                 textoRisco.innerText = resultado.risco;
-                textoDecisao.innerText = resultado.decisao;
+                textoDecisao.innerText = "Decisão: " + resultado.decisao;
 
-                // Lógica de Cores (Verde para Aprovado, Vermelho para Negado)
-                // Usamos .includes() para aceitar tanto "APROVADO" quanto "CRÉDITO APROVADO"
+                // Definição das cores (Fundo e Borda)
+                const coresVerde = ['bg-green-50', 'border-green-500'];
+                const coresVermelho = ['bg-red-50', 'border-red-500'];
+
+                // Lógica de Estilo Robusta: Remove um conjunto e adiciona o outro
                 if (resultado.decisao && resultado.decisao.includes('APROVADO')) {
-                    textoDecisao.className = 'text-green-600';
-                    divResultado.className = 'mt-8 p-6 bg-green-50 rounded-lg border border-green-200 text-center shadow-lg';
+                    // Se aprovado: Tira vermelho, põe verde
+                    divResultado.classList.remove(...coresVermelho);
+                    divResultado.classList.add(...coresVerde);
+                    textoDecisao.className = 'text-green-700'; // Cor do texto do título
                 } else {
-                    textoDecisao.className = 'text-red-600';
-                    divResultado.className = 'mt-8 p-6 bg-red-50 rounded-lg border border-red-200 text-center shadow-lg';
+                    // Se negado: Tira verde, põe vermelho
+                    divResultado.classList.remove(...coresVerde);
+                    divResultado.classList.add(...coresVermelho);
+                    textoDecisao.className = 'text-red-700'; // Cor do texto do título
                 }
 
             } catch (error) {
                 console.error("Erro na requisição:", error);
-                alert("Erro ao conectar com o servidor. Verifique se o Python está rodando.");
+                alert("Erro ao conectar com o servidor.");
             }
         });
     </script>
