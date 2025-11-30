@@ -88,17 +88,17 @@
             </div>
         </form>
 
-        <div id="resultado" class="hidden mt-8 p-6 bg-gray-50 rounded-lg border text-center">
+        <div id="resultado" class="hidden mt-8 p-6 rounded-lg border text-center shadow-lg transition-all duration-500">
             <h2 class="text-2xl font-bold mb-2">Decisão: <span id="decisaoTexto"></span></h2>
-            <p class="text-gray-600">Probabilidade de Inadimplência: <span id="riscoTexto" class="font-bold"></span></p>
+            <p class="text-gray-700 text-lg">Probabilidade de Inadimplência: <span id="riscoTexto" class="font-bold"></span></p>
         </div>
     </div>
 
     <script>
         document.getElementById('formAnalise').addEventListener('submit', async function(e) {
-            e.preventDefault();
+            e.preventDefault(); // Impede o recarregamento da página
 
-            // Pega os dados
+            // Coleta os dados do formulário
             const dados = {
                 idade: document.getElementById('idade').value,
                 renda: document.getElementById('renda').value,
@@ -113,6 +113,7 @@
             };
 
             try {
+                // Envia os dados para o backend (app.py)
                 const response = await fetch('/predict', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -121,36 +122,35 @@
 
                 const resultado = await response.json();
 
-                // Referências dos elementos na tela
+                // Referências aos elementos da tela
                 const divResultado = document.getElementById('resultado');
                 const textoDecisao = document.getElementById('decisaoTexto');
                 const textoRisco = document.getElementById('riscoTexto');
 
-                // Verifica se o Python retornou erro
+                // Verifica se houve erro no backend
                 if (resultado.erro) {
-                    alert("Ocorreu um erro no servidor: " + resultado.erro);
+                    alert("Erro no servidor: " + resultado.erro);
                     return;
                 }
 
-                // Se deu certo:
+                // Exibe o resultado
                 divResultado.classList.remove('hidden');
-                textoRisco.innerText = "Risco calculado: " + resultado.risco;
+                textoRisco.innerText = resultado.risco;
                 textoDecisao.innerText = resultado.decisao;
 
-                // Estilização (Verde/Vermelho)
-                divResultado.className = 'mt-8 p-6 rounded-lg border text-center shadow-lg';
-                
-                if(resultado.decisao.includes('APROVADO')) {
-                    textoDecisao.className = 'text-2xl font-bold text-green-600 mb-2';
-                    divResultado.classList.add('bg-green-100', 'border-green-300');
+                // Lógica de Cores (Verde para Aprovado, Vermelho para Negado)
+                // Usamos .includes() para aceitar tanto "APROVADO" quanto "CRÉDITO APROVADO"
+                if (resultado.decisao && resultado.decisao.includes('APROVADO')) {
+                    textoDecisao.className = 'text-green-600';
+                    divResultado.className = 'mt-8 p-6 bg-green-50 rounded-lg border border-green-200 text-center shadow-lg';
                 } else {
-                    textoDecisao.className = 'text-2xl font-bold text-red-600 mb-2';
-                    divResultado.classList.add('bg-red-100', 'border-red-300');
+                    textoDecisao.className = 'text-red-600';
+                    divResultado.className = 'mt-8 p-6 bg-red-50 rounded-lg border border-red-200 text-center shadow-lg';
                 }
 
-            } catch (err) {
-                alert("Erro de comunicação com o servidor.");
-                console.error(err);
+            } catch (error) {
+                console.error("Erro na requisição:", error);
+                alert("Erro ao conectar com o servidor. Verifique se o Python está rodando.");
             }
         });
     </script>
